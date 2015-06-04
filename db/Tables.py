@@ -39,8 +39,8 @@ class Faculty(Base):
 class School(Base):
     __tablename__ = "school"
     uid = Column(Integer, primary_key=True)
-    name = Column(String(64), nullable=False)
-    abbreviation = Column(String(16), nullable=False)
-    faculty = relationship("Student", backref="school")  # joins to faculty
-    students = relationship("Faculty", backref="school")  # joins to student
+    name = Column(String(64), nullable=False, unique=True)
+    abbreviation = Column(String(16), nullable=False, unique=True)
+    students = relationship("Student", backref="school")  # 1-m joins to faculty
+    faculty = relationship("Faculty", backref="school")  # 1-m joins to student
 
