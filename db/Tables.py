@@ -44,3 +44,14 @@ class School(Base):
     students = relationship("Student", backref="school")  # 1-m joins to faculty
     faculty = relationship("Faculty", backref="school")  # 1-m joins to student
 
+class Course(Base):
+    __tablename__ = "course"
+    uid = Column(Integer, primary_key=True)
+    name = Column(String(64), nullable=False)
+    description = Column(String(2000), nullable=True)
+    abbreviation = Column(String(8), nullable=False)
+
+class Section(Base):
+    __tablename__ = "section"
+    uid = Column(Integer, primary_key=True)
+
