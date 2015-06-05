@@ -50,8 +50,14 @@ class Course(Base):
     name = Column(String(64), nullable=False)
     description = Column(String(2000), nullable=True)
     abbreviation = Column(String(8), nullable=False)
+    sections = relationship("Section", backref="course")
 
 class Section(Base):
     __tablename__ = "section"
     uid = Column(Integer, primary_key=True)
+    # semester
+    # year
+    # professor
+    # etc.
+
 
