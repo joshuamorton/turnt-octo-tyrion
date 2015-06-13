@@ -1,7 +1,7 @@
 import unittest
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
-from db.Tables import School, Account, Student, Faculty, Base
+from db.Tables import School, Account, Student, Faculty, Base, Course, Section, Rating
 from sqlalchemy import create_engine, MetaData
 
 
@@ -120,8 +120,40 @@ class TableTest(unittest.TestCase):
         self.session.add(third)
         self.assertRaises(IntegrityError, self.session.commit)
 
+    def test_teacher_ratings(self):
+        school = School(name="Georgia Institute", abbreviation="gatech")
+        user = Account(username="josh", email_address="me@web.com", password_hash="hash",
+                       password_salt="the saltiest")
+        other = Account(username="bob", email_address="you@web.com", password_hash="hash",
+                       password_salt="the saltiest")
+        student = Student(school=school, account=user)
+        user2 = Account(username="j", email_address="u@web.com", password_hash="hash",
+                       password_salt="the saltiest")
+        student2 = Student(school=school, account=user2)
+        teacher = Faculty(school=school, account=other)
+        course = Course(name="mine", abbreviation="m")
+        course2 = Course(name="other", abbreviation="o")
+        section = Section(professor=teacher, course=course, semester=1, year=2014)
+        section2 = Section(professor=teacher, course=course2, semester=2, year=2014)
+        rating = Rating(student=student, section=section, rating=4)
+        rating2 = Rating(student=student, section=section2, rating=3)
+        rating3 = Rating(student=student2, section=section, rating=2)
+        self.session.add(school)
+        self.session.add(user)
+        self.session.add(student)
+        self.session.add(teacher)
+        self.session.add(course)
+        self.session.add(section)
+        self.session.add(rating)
+        self.session.add(user2)
+        self.session.add(student2)
+        self.session.add(rating2)
+        self.session.add(rating3)
+        self.session.commit()
+        self.assertEqual({rating2, rating, rating3}, set(teacher.ratings))
 
-
+def tests():
+    return unittest.TestLoader().loadTestsFromTestCase(TableTest)
 
 if __name__ == "__main__":
     unittest.main()

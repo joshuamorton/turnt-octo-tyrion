@@ -1,3 +1,4 @@
+import itertools
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
@@ -27,6 +28,8 @@ class Rating(Base):
     student_id = Column(Integer, ForeignKey('student.uid'), primary_key=True)
     section_id = Column(Integer, ForeignKey('section.uid'), primary_key=True)
     rating = Column(Integer, nullable=True)
+    section = relationship('Section', backref='ratings')
+    student = relationship('Student', backref='ratings')
 
 
 class Student(Base):
@@ -43,6 +46,12 @@ class Faculty(Base):
     school_id = Column(Integer, ForeignKey("school.uid"))  # joins to school
     user_id = Column(Integer, ForeignKey("account.uid"), nullable=True)  # joins to account
     sections = relationship("Section", backref="professor")
+
+    @property
+    def ratings(self):
+        ratings = ((rating for rating in section.ratings) for section in self.sections)
+        return itertools.chain(*ratings)
+
 
 
 class School(Base):
@@ -68,8 +77,8 @@ class Section(Base):
     uid = Column(Integer, primary_key=True)
     professor_id = Column(Integer, ForeignKey("faculty.uid"))
     course_id = Column(Integer, ForeignKey('course.uid'))
-    semester = Column(Integer)
-    year = Column(Integer)
+    semester = Column(Integer, nullable=False)
+    year = Column(Integer, nullable=False)
 
 
 
