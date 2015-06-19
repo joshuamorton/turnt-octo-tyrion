@@ -19,8 +19,8 @@ class Account(Base):
 
     # An account could be both a student and a teacher, as in the case of a grad student
     # that TAs or teaches an undergraduate class
-    student =  relationship("Student", backref="account", uselist=False)  # joins to student
-    faculty =  relationship("Faculty", backref="account", uselist=False)  # joins to faculty
+    student = relationship("Student", backref="account", uselist=False)  # joins to student
+    faculty = relationship("Faculty", backref="account", uselist=False)  # joins to faculty
 
 
 class Rating(Base):
@@ -53,7 +53,6 @@ class Faculty(Base):
         return itertools.chain(*ratings)
 
 
-
 class School(Base):
     __tablename__ = "school"
     uid = Column(Integer, primary_key=True)
@@ -79,6 +78,3 @@ class Section(Base):
     course_id = Column(Integer, ForeignKey('course.uid'))
     semester = Column(Integer, nullable=False)
     year = Column(Integer, nullable=False)
-
-
-

@@ -2,10 +2,11 @@ import unittest
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 from db.Tables import School, Account, Student, Faculty, Base, Course, Section, Rating
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine
 
 
 __author__ = 'Josh'
+
 
 class TableTest(unittest.TestCase):
 
@@ -38,7 +39,7 @@ class TableTest(unittest.TestCase):
                                  password_hash="secret", password_salt="table"))
         self.session.commit()
         # and it persists
-        self.assertEqual("bob",self.session.query(Account).all()[0].username)
+        self.assertEqual("bob", self.session.query(Account).all()[0].username)
 
     def test_school_nulls(self):
         # makes sure that everything is not nullable
@@ -59,7 +60,7 @@ class TableTest(unittest.TestCase):
         user = Account(username="josh", email_address="me@web.com", password_hash="hash",
                        password_salt="the saltiest")
         other = Account(username="bob", email_address="you@web.com", password_hash="hash",
-                       password_salt="the saltiest")
+                        password_salt="the saltiest")
         student = Student(school=school, account=user)
         teacher = Faculty(school=school, account=other)
 
@@ -76,7 +77,7 @@ class TableTest(unittest.TestCase):
         self.assertEqual(user.student.school, other.faculty.school)
 
     def test_doubled_user(self):
-        # a user account can be bound to boht a student and faculty instance, this checks
+        # a user account can be bound to both a student and faculty instance, this checks
         # that that functions correctly
         school = School(name="Georgia Institute", abbreviation="gatech")
         user = Account(username="josh", email_address="me@web.com", password_hash="hash",
@@ -125,10 +126,10 @@ class TableTest(unittest.TestCase):
         user = Account(username="josh", email_address="me@web.com", password_hash="hash",
                        password_salt="the saltiest")
         other = Account(username="bob", email_address="you@web.com", password_hash="hash",
-                       password_salt="the saltiest")
+                        password_salt="the saltiest")
         student = Student(school=school, account=user)
         user2 = Account(username="j", email_address="u@web.com", password_hash="hash",
-                       password_salt="the saltiest")
+                        password_salt="the saltiest")
         student2 = Student(school=school, account=user2)
         teacher = Faculty(school=school, account=other)
         course = Course(name="mine", abbreviation="m")
@@ -151,6 +152,7 @@ class TableTest(unittest.TestCase):
         self.session.add(rating3)
         self.session.commit()
         self.assertEqual({rating2, rating, rating3}, set(teacher.ratings))
+
 
 def tests():
     return unittest.TestLoader().loadTestsFromTestCase(TableTest)
