@@ -1,3 +1,4 @@
+import os
 import unittest
 from db import Database
 
@@ -36,6 +37,25 @@ class DatabaseTest(unittest.TestCase):
 
             schools = sesh.query(db.school).all()
             self.assertEqual(2, len(schools))
+
+
+    def create_real_db(self):
+        return Database.Database(name="test.db", folder=".")
+
+    def test_db_persistence(self):
+        db = self.create_real_db()
+        with db.scope as sesh:
+            school = db.school(name="Georgia Institute", abbreviation="gatech")
+            sesh.add(school)
+
+        del db
+        db2 = self.create_real_db()
+        with db2.scope as sesh:
+            schools = sesh.query(db2.school).all()
+
+            self.assertEqual("Georgia Institute", schools[0].name)
+
+        os.remove('test.db')
 
 
 def tests():
