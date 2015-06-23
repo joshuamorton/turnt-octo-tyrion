@@ -2,6 +2,7 @@ import itertools
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm.session import Session
 
 __author__ = 'Josh'
 Base = declarative_base()
@@ -49,8 +50,8 @@ class Faculty(Base):
 
     @property
     def ratings(self):
-        ratings = ((rating for rating in section.ratings) for section in self.sections)
-        return itertools.chain(*ratings)
+        session = Session.object_session(self)
+        return session.query(Rating).join(Section).filter(Section.professor == self).all()
 
 
 class School(Base):
