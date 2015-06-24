@@ -52,7 +52,6 @@ class DatabaseTest(unittest.TestCase):
         db2 = self.create_real_db()
         with db2.scope as sesh:
             schools = sesh.query(db2.school).all()
-
             self.assertEqual("Georgia Institute", schools[0].name)
 
         os.remove('test.db')

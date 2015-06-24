@@ -50,6 +50,10 @@ class Faculty(Base):
 
     @property
     def ratings(self):
+        """
+        queries the database for all ratings for the professor/faculty member
+        :return: Iterable[Rating]
+        """
         session = Session.object_session(self)
         return session.query(Rating).join(Section).filter(Section.professor == self).all()
 
@@ -61,11 +65,12 @@ class School(Base):
     abbreviation = Column(String(16), nullable=False, unique=True)
     students = relationship("Student", backref="school")  # 1-m joins to faculty
     faculty = relationship("Faculty", backref="school")  # 1-m joins to student
-
+    courses = relationship("Course", backref="school") # 1-m joins to course
 
 class Course(Base):
     __tablename__ = "course"
     uid = Column(Integer, primary_key=True)
+    school_id = Column(Integer, ForeignKey("school.uid"), nullable=False)
     name = Column(String(64), nullable=False)
     description = Column(String(2000), nullable=True)
     abbreviation = Column(String(8), nullable=False)
