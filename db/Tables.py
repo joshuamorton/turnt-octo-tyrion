@@ -38,7 +38,12 @@ class Student(Base):
     uid = Column(Integer, primary_key=True)
     school_id = Column(Integer, ForeignKey("school.uid"))  # joins to school
     user_id = Column(Integer, ForeignKey("account.uid"))  # joins to account
-    courses = relationship('Section', secondary='rating', backref='student')
+    sections = relationship('Section', secondary='rating', backref='student')
+
+    @property
+    def courses(self):
+        session = Session.object_session(self)
+        return session.query(Course).join(Section).filter(Section.uid.in_(section.uid for section in self.sections)).all()
 
 
 class Faculty(Base):
@@ -66,6 +71,12 @@ class School(Base):
     students = relationship("Student", backref="school")  # 1-m joins to faculty
     faculty = relationship("Faculty", backref="school")  # 1-m joins to student
     courses = relationship("Course", backref="school") # 1-m joins to course
+
+    @property
+    def sections(self):
+        session = Session.object_session(self)
+        return session.query(Section).join(Course).filter(Course.school == self).all()
+
 
 class Course(Base):
     __tablename__ = "course"
