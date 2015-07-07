@@ -56,7 +56,6 @@ class DatabaseTest(unittest.TestCase):
 
         os.remove('test.db')
 
-
 def tests():
     return unittest.TestLoader().loadTestsFromTestCase(DatabaseTest)
 
