@@ -86,6 +86,10 @@ class Course(Base):
     abbreviation = Column(String(8), nullable=False)
     sections = relationship("Section", backref="course")
 
+    @property
+    def professors(self):
+        session = Session.object_session(self)
+        return session.query(Faculty).join(Section).filter(Section.course == self).all()
 
 class Section(Base):
     __tablename__ = "section"
