@@ -187,6 +187,15 @@ class TableTest(unittest.TestCase):
         self.session.add_all([course, section])
         self.assertEqual([section], objects["school"].sections)
 
+    def test_rating_course(self):
+        objects = self.build_situation()
+        self.session.add_all(objects.values())
+        course = Course(name="mine", abbreviation="m", school=objects["school"])
+        section = Section(professor=objects["teacher"], course=course, semester=1, year=2014)
+        rating = Rating(section=section, student=objects["student"], rating=2)
+        self.session.add_all([course, section, rating])
+        self.assertEqual(course, rating.course)
+
 
 def tests():
     return unittest.TestLoader().loadTestsFromTestCase(TableTest)

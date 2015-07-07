@@ -31,6 +31,14 @@ class Rating(Base):
     section = relationship('Section', backref='ratings')
     student = relationship('Student', backref='ratings')
 
+    @property
+    def course(self):
+        """
+        returns the course that this rating is for (as in parent of the section)
+        :return: Course object
+        """
+        return self.section.course
+
 
 class Student(Base):
     __tablename__ = "student"

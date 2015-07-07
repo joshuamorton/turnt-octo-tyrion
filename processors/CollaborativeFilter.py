@@ -2,7 +2,7 @@ __author__ = 'Josh'
 import math
 
 
-class CollaborativeFilter():
+class CollaborativeFilter:
     """
     A collaborative filter to be connected to a sqlalchemy database, one per ratable
      attribute
@@ -33,7 +33,7 @@ class CollaborativeFilter():
                 # get all other users
                 users = {session.query(db.students).all()} - {user}
                 courses = set(user.courses)
-                shared = {other : courses & {other.courses} for other in users}
+                shared = {other: courses & {other.courses} for other in users}
                 # Dict[User, Set[Course]] where each Set[Course] is the set of courses
                 # taken by 'user' and the dict key
 
@@ -42,6 +42,9 @@ class CollaborativeFilter():
                 # where k = 1 / \sum_{u' \in U}{|simil(u, u') * r_{u', i}|}
                 # and simil(a, b) is the cosine distance of a and b
 
+                print(shared)
 
-
-
+    def root_sum_squared(self, username):
+        with self.db.scope as session:
+            account = session.query(self.db.account).filter(self.db.account.username == username).one()
+            return math.sqrt(sum(rating.__getattribute__(self.attr) ** 2 for rating in account.student.ratings))

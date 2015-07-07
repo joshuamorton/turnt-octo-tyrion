@@ -1,13 +1,14 @@
 import unittest
 import coverage
-from tests import TableTest, DatabaseTest
+from tests import TableTest, DatabaseTest, CollaborativeFilterTest
 
 
 __author__ = 'Josh'
 
 modules = [
     TableTest.tests(),
-    DatabaseTest.tests()
+    DatabaseTest.tests(),
+    CollaborativeFilterTest.tests()
 ]
 
 alltests = unittest.TestSuite(modules)

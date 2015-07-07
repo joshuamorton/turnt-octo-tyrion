@@ -38,7 +38,6 @@ class DatabaseTest(unittest.TestCase):
             schools = sesh.query(db.school).all()
             self.assertEqual(2, len(schools))
 
-
     def create_real_db(self):
         return Database.Database(name="test.db", folder=".")
 
