@@ -21,6 +21,7 @@ class Database:
         self.metadata = self.base.metadata
         self.metadata.create_all(self.engine)
         self.Session = sqlalchemy.orm.sessionmaker(bind=self.engine)
+        self.session = None
 
     @property
     @contextmanager
@@ -31,6 +32,7 @@ class Database:
         :return: a session object
         """
         session = self.Session()
+        self.session = session
         try:
             yield session
             session.commit()
@@ -39,3 +41,10 @@ class Database:
             raise
         finally:
             session.close()
+            self.session = None
+
+    def query_rating(self, user, course, attr): #get a test for this
+        return self.session.query(self.rating).join(self.section).\
+            filter(self.rating.student == user,
+                   self.section.course == course).one().__getattribute__(attr)
+

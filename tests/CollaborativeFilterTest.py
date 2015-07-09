@@ -32,12 +32,17 @@ class CollaborativeFilterTest(unittest.TestCase):
             ratings = [Rating(rating=i, section=pair[1], student=pair[0])for i, pair in enumerate(itertools.product([student, student2], sections))]
             sesh.add_all(ratings)
 
-
     def test_rss(self):
         with self.db.scope as sesh:
             student = sesh.query(Student).join(Account).filter(Account.username == "josh").one()
-        self.assertEqual(math.sqrt(30), self.cf.root_sum_squared("josh"))
-        self.assertEqual(math.sqrt(sum([25, 36, 49, 64, 81])), self.cf.root_sum_squared("j"))
+            self.assertEqual(math.sqrt(30), self.cf.rating_root_sum_squared(student.uid))
+
+    def test_similarity(self):
+        with self.db.scope as sesh:
+            joshid = sesh.query(Student).join(Account).filter(Account.username == "josh").one().uid
+            jid = sesh.query(Student).join(Account).filter(Account.username == "j").one().uid
+
+        print(self.cf.course_similarity(joshid, jid))
 
 def tests():
     return unittest.TestLoader().loadTestsFromTestCase(CollaborativeFilterTest)
