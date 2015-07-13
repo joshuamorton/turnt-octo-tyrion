@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+import functools
 import sqlalchemy
 from . import Tables
 
@@ -47,4 +48,10 @@ class Database:
         return self.session.query(self.rating).join(self.section).\
             filter(self.rating.student == user,
                    self.section.course == course).one().__getattribute__(attr)
+
+    def student_with_id(self, user_id):
+        return self.session.query(self.student).filter(self.student.uid == user_id).one()
+
+    def student_with_name(self, user_name):
+        return self.session.query(self.account).filter(self.account.username == user_name).one().student
 

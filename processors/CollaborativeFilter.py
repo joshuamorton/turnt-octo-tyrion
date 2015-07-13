@@ -42,19 +42,16 @@ class CollaborativeFilter:
                 # where k = 1 / \sum_{u' \in U}{|simil(u, u') * r_{u', i}|}
                 # and simil(a, b) is the cosine distance of a and b
 
-                print("hi")
-
     def rating_root_sum_squared(self, userid):
         with self.db.scope as session:
-            account = session.query(self.db.account).filter(self.db.account.uid == userid).one()
-            return math.sqrt(sum(rating.__getattribute__(self.attr) ** 2 for rating in account.student.ratings))
+            return math.sqrt(sum(rating.__getattribute__(self.attr) ** 2 for rating in self.db.student_with_id(userid).ratings))
 
-    def course_similarity(self, userid, otherid):  # test this
+    def course_similarity(self, username, othername):  # test this
         with self.db.scope as session:
-            user = session.query(self.db.student).filter(self.db.student.uid == userid).one()
-            other = session.query(self.db.student).filter(self.db.student.uid == otherid).one()
+            user = self.db.student_with_name(username)
+            other = self.db.student_with_name(othername)
             shared_courses = set(user.courses) & set(other.courses)
             ratings = [self.db.query_rating(user, course, self.attr) * self.db.query_rating(other, course, self.attr) for course in shared_courses]
 
-        return sum(ratings) / (self.rating_root_sum_squared(userid) * self.rating_root_sum_squared(otherid))
+            return sum(ratings) / (self.rating_root_sum_squared(user.uid) * self.rating_root_sum_squared(other.uid))
 

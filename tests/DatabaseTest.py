@@ -55,6 +55,19 @@ class DatabaseTest(unittest.TestCase):
 
         os.remove('test.db')
 
+    def test_user_methods(self):
+        db = self.create_in_memory()
+
+        with db.scope as session:
+            school = db.school(name="Georgia Institute", abbreviation="gatech")
+            account = db.account(username="hello", email_address="a", password_hash="1", password_salt="2")
+            student = db.student(school_id=1, user_id=1)
+            session.add_all([school, account, student])
+            hello = db.student_with_name("hello")
+            one = db.student_with_id(1)
+            self.assertIsNotNone(one)
+            self.assertEqual(hello, one)
+
 def tests():
     return unittest.TestLoader().loadTestsFromTestCase(DatabaseTest)
 

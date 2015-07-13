@@ -38,11 +38,8 @@ class CollaborativeFilterTest(unittest.TestCase):
             self.assertEqual(math.sqrt(30), self.cf.rating_root_sum_squared(student.uid))
 
     def test_similarity(self):
-        with self.db.scope as sesh:
-            joshid = sesh.query(Student).join(Account).filter(Account.username == "josh").one().uid
-            jid = sesh.query(Student).join(Account).filter(Account.username == "j").one().uid
 
-        print(self.cf.course_similarity(joshid, jid))
+        self.cf.course_similarity("josh", "j")
 
 def tests():
     return unittest.TestLoader().loadTestsFromTestCase(CollaborativeFilterTest)
