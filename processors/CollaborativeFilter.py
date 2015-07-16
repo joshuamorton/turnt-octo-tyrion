@@ -1,3 +1,6 @@
+from sqlalchemy import func
+
+
 __author__ = 'Josh'
 import math
 
@@ -34,24 +37,37 @@ class CollaborativeFilter:
                 users = {session.query(db.students).all()} - {user}
                 courses = set(user.courses)
                 shared = {other: courses & {other.courses} for other in users}
-                # Dict[User, Set[Course]] where each Set[Course] is the set of courses
-                # taken by 'user' and the dict key
 
-                # the similarity is defined as
-                # r_{u, i} = k \sum_{u' \in U}{simil(u, u') * r_{u', i}}
-                # where k = 1 / \sum_{u' \in U}{|simil(u, u') * r_{u', i}|}
-                # and simil(a, b) is the cosine distance of a and b
+    def _rating_root_sum_squared(self, userid: int) -> float:
+        """
+        Finds the root sum squared of all ratings by a given user.
+        (\sqrt{\sum_{i\in I_x}{rating^2_{x,i}}})
 
-    def rating_root_sum_squared(self, userid):
-        with self.db.scope as session:
-            return math.sqrt(sum(rating.__getattribute__(self.attr) ** 2 for rating in self.db.student_with_id(userid).ratings))
+        The tricy bit is that it aggregates by course not section.  This is generally not a problem, but in the case of
+        a student taking a course repeatedly (research, failing, etc.) its necessary to merge all sections for the
+        course into an overall number.  This is done with the rather complex join and groupby
+        :param userid: the uid of the user
+        :return: a float
+        """
+        query = (self.db.session.query(func.avg(self.db.rating.rating))
+                 .join(self.db.student)
+                 .join(self.db.section)
+                 .filter(self.db.student.uid == userid)
+                 .group_by(self.db.section.course_id).all())
+        return math.sqrt(sum(x[0]**2 for x in query))
 
-    def course_similarity(self, username, othername):  # test this
+    def course_similarity(self, username: str, othername: str) -> float:  # test this
+        """
+        get the coursewise similarity between two users (as opposed to section-wise)
+        :param username: username for user
+        :param othername: username for the other use
+        :return: a float defining their similarity
+        """
         with self.db.scope as session:
             user = self.db.student_with_name(username)
             other = self.db.student_with_name(othername)
             shared_courses = set(user.courses) & set(other.courses)
-            ratings = [self.db.query_rating(user, course, self.attr) * self.db.query_rating(other, course, self.attr) for course in shared_courses]
+            ratings = [self.db.query_rating(user, course, self.attr)
+                       * self.db.query_rating(other, course, self.attr) for course in shared_courses]
 
-            return sum(ratings) / (self.rating_root_sum_squared(user.uid) * self.rating_root_sum_squared(other.uid))
-
+            return sum(ratings) / (self._rating_root_sum_squared(user.uid) * self._rating_root_sum_squared(other.uid))

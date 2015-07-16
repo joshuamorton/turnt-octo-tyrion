@@ -1,8 +1,7 @@
 from contextlib import contextmanager
-import functools
 import sqlalchemy
 from . import Tables
-
+from db.Tables import Student
 
 __author__ = 'Josh'
 
@@ -44,14 +43,17 @@ class Database:
             session.close()
             self.session = None
 
-    def query_rating(self, user, course, attr): #get a test for this
-        return self.session.query(self.rating).join(self.section).\
+    def query_rating(self, user, course, attr) -> float:
+        """
+        for use within a sessionmanager object
+        """
+        ratings = self.session.query(self.rating).join(self.section).\
             filter(self.rating.student == user,
-                   self.section.course == course).one().__getattribute__(attr)
+                   self.section.course == course).all()
+        return sum(rating.__getattribute__(attr) for rating in ratings) / len(ratings)
 
-    def student_with_id(self, user_id):
+    def student_with_id(self, user_id) -> Student:
         return self.session.query(self.student).filter(self.student.uid == user_id).one()
 
-    def student_with_name(self, user_name):
+    def student_with_name(self, user_name) -> Student:
         return self.session.query(self.account).filter(self.account.username == user_name).one().student
-

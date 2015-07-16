@@ -68,6 +68,7 @@ class DatabaseTest(unittest.TestCase):
             self.assertIsNotNone(one)
             self.assertEqual(hello, one)
 
+
 def tests():
     return unittest.TestLoader().loadTestsFromTestCase(DatabaseTest)
 

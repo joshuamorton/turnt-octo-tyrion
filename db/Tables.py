@@ -39,6 +39,9 @@ class Rating(Base):
         """
         return self.section.course
 
+    def __repr__(self):
+        return "<Rating of " + str(self.rating) + ">"
+
 
 class Student(Base):
     __tablename__ = "student"
@@ -50,7 +53,8 @@ class Student(Base):
     @property
     def courses(self):
         session = Session.object_session(self)
-        return session.query(Course).join(Section).filter(Section.uid.in_(section.uid for section in self.sections)).all()
+        return session.query(Course).join(Section).filter(Section.uid.in_(
+            section.uid for section in self.sections)).all()
 
 
 class Faculty(Base):
@@ -77,7 +81,7 @@ class School(Base):
     abbreviation = Column(String(16), nullable=False, unique=True)
     students = relationship("Student", backref="school")  # 1-m joins to faculty
     faculty = relationship("Faculty", backref="school")  # 1-m joins to student
-    courses = relationship("Course", backref="school") # 1-m joins to course
+    courses = relationship("Course", backref="school")  # 1-m joins to course
 
     @property
     def sections(self):
@@ -98,6 +102,7 @@ class Course(Base):
     def professors(self):
         session = Session.object_session(self)
         return session.query(Faculty).join(Section).filter(Section.course == self).all()
+
 
 class Section(Base):
     __tablename__ = "section"
