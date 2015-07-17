@@ -49,7 +49,12 @@ class CollaborativeFilter:
         :param userid: the uid of the user
         :return: a float
         """
-        query = (self.db.session.query(func.avg(self.db.rating.rating))
+        attr = type(self.db.rating).__getattribute__(self.db.rating, self.attr)
+        # kludgy workaround because rating is a class not an instance, so __getattribute__
+        # expects to take an additional argument, and so
+        # attr = self.db.rating.__getattribute__(self.attr) throws a typeerror
+        
+        query = (self.db.session.query(func.avg(attr))
                  .join(self.db.student)
                  .join(self.db.section)
                  .filter(self.db.student.uid == userid)
