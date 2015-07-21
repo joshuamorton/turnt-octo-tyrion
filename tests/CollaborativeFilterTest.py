@@ -36,10 +36,13 @@ class CollaborativeFilterTest(unittest.TestCase):
     def test_rss(self):
         with self.db.scope as sesh:
             student = sesh.query(Student).join(Account).filter(Account.username == "josh").one()
-            self.assertEqual(math.sqrt(30), self.cf._rating_root_sum_squared(student.uid))
+            self.assertEqual(math.sqrt(30), self.cf._rating_root_sum_squared(student))
 
     def test_similarity(self):
-        self.assertAlmostEqual(.9146, self.cf.course_similarity("josh", "j"), places=3)
+        with self.db.scope as session:
+            josh = session.query(Student).join(Account).filter(Account.username == "josh").one()
+            j = session.query(Student).join(Account).filter(Account.username == "j").one()
+            self.assertAlmostEqual(.9146, self.cf.course_similarity(josh, j), places=3)
 
     def test_multiple_sections(self):
         """
@@ -62,10 +65,34 @@ class CollaborativeFilterTest(unittest.TestCase):
                                                                                 otherstudent.sections)]
             student = sesh.query(Student).join(Account).filter(Account.username == "josh").one()
             self.assertEqual(2, len(c.sections))
-            self.assertEqual(self.cf._rating_root_sum_squared(student.uid), self.cf._rating_root_sum_squared(stud3.uid))
-        joshj = self.cf.course_similarity("josh", "j")  # first comparison
-        jo = self.cf.course_similarity("j", "o")
+            self.assertEqual(self.cf._rating_root_sum_squared(student), self.cf._rating_root_sum_squared(stud3))
+            joshj = self.cf.course_similarity(student, otherstudent)  # first comparison
+            jo = self.cf.course_similarity(otherstudent, stud3)
         self.assertEqual(joshj, jo)
+
+    def test_cf_prediction_basic(self):
+        self.assertAlmostEqual(9,self.cf.opinion(1,5,cache=False))
+
+    def test_cf_prediction_on_known(self):
+        # recreating things because reasons
+        db = Database.Database(engine="sqlite://", name="", folder="")
+        cf = CollaborativeFilter.CollaborativeFilter(db, "rating")
+        with db.scope as sesh:
+            school = School(name="Georgia Institute of Technology", abbreviation="gatech")
+            accounts = [Account(username=str(i), email_address=str(i), password_hash="hash",
+                           password_salt="the saltiest") for i in range(4)]
+            teacher = Faculty(school=school, account=accounts[0])
+            students = [Student(school=school, account=account) for account in accounts]
+            courses = [Course(name="course"+str(i), abbreviation="CS"+str(i), school=school) for i in range(4)]
+            sections = [Section(professor=teacher, course=c, year=2015, semester=2) for c in courses]
+            rate_array = [[1,2,3,5],[1,0,3,5], [1,1,1,1], [5,5,5,5]]
+            ratings = [Rating(rating=rate_array[i//4][i%4],
+                              section=pair[1], student=pair[0])
+                       for i, pair in enumerate(itertools.product(students, sections))]
+
+            sesh.add_all([school, teacher]+accounts+students+courses+ratings)
+        self.assertAlmostEqual(2.638,cf.opinion(2,2,cache=False), 2)
+
 
 
 def tests():

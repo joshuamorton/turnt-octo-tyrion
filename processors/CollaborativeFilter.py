@@ -1,5 +1,5 @@
 from sqlalchemy import func
-
+from db.Tables import Student, Course
 
 __author__ = 'Josh'
 import math
@@ -24,26 +24,32 @@ class CollaborativeFilter:
         self.similarity_cache = dict()
         self.calculated_cache = dict()
 
-    def opinion(self, student, section, cache=True):
+    def opinion(self, student, courseid, cache=True) -> float:
         db = self.db
         if cache:
             pass
         else:
             # calculates ratings without any use of a cache layer
             with db.scope as session:
+                course = session.query(db.course).filter(db.course.uid == courseid).one()
                 # get the single user
-                user = session.query(db.students).filter(db.students.uid == student).one()
+                user = session.query(db.student).filter(db.student.uid == student).one()
                 # get all other users
-                users = {session.query(db.students).all()} - {user}
-                courses = set(user.courses)
-                shared = {other: courses & {other.courses} for other in users}
+                users = set(session.query(db.student).all()) - {user}
+                k, total_rating = 0, 0
+                for other in users:
+                    simil = self.course_similarity(user.account.student, other.account.student, exclude=course)
+                    total_rating += simil * self.db.query_rating(other, course, self.attr)
+                    k += abs(simil)
+            return total_rating / k
 
-    def _rating_root_sum_squared(self, userid: int) -> float:
+
+    def _rating_root_sum_squared(self, user: Student, exclude: Course=None) -> float:
         """
         Finds the root sum squared of all ratings by a given user.
         (\sqrt{\sum_{i\in I_x}{rating^2_{x,i}}})
 
-        The tricy bit is that it aggregates by course not section.  This is generally not a problem, but in the case of
+        The tricky bit is that it aggregates by course not section.  This is generally not a problem, but in the case of
         a student taking a course repeatedly (research, failing, etc.) its necessary to merge all sections for the
         course into an overall number.  This is done with the rather complex join and groupby
         :param userid: the uid of the user
@@ -53,26 +59,30 @@ class CollaborativeFilter:
         # kludgy workaround because rating is a class not an instance, so __getattribute__
         # expects to take an additional argument, and so
         # attr = self.db.rating.__getattribute__(self.attr) throws a typeerror
-        
+        if exclude is not None:
+            excluded_id = exclude.uid
+        else:
+            excluded_id = None
         query = (self.db.session.query(func.avg(attr))
                  .join(self.db.student)
                  .join(self.db.section)
-                 .filter(self.db.student.uid == userid)
+                 .join(self.db.course)
+                 .filter(self.db.student.uid == user.uid)
+                 .filter(self.db.course.uid != excluded_id)
                  .group_by(self.db.section.course_id).all())
         return math.sqrt(sum(x[0]**2 for x in query))
 
-    def course_similarity(self, username: str, othername: str) -> float:  # test this
+    def course_similarity(self, user: Student, other: Student, exclude:Course=None) -> float:
         """
-        get the coursewise similarity between two users (as opposed to section-wise)
-        :param username: username for user
-        :param othername: username for the other use
-        :return: a float defining their similarity
-        """
-        with self.db.scope as session:
-            user = self.db.student_with_name(username)
-            other = self.db.student_with_name(othername)
-            shared_courses = set(user.courses) & set(other.courses)
-            ratings = [self.db.query_rating(user, course, self.attr)
-                       * self.db.query_rating(other, course, self.attr) for course in shared_courses]
 
-            return sum(ratings) / (self._rating_root_sum_squared(user.uid) * self._rating_root_sum_squared(other.uid))
+        :param user:
+        :param other:
+        :param exclude:
+        :return:
+        """
+        shared_courses = set(user.courses) & set(other.courses)
+        ratings = [self.db.query_rating(user, course, self.attr)
+                   * self.db.query_rating(other, course, self.attr) for course in shared_courses]
+
+        return sum(ratings) / (self._rating_root_sum_squared(user, exclude=exclude) *
+                               self._rating_root_sum_squared(other, exclude=exclude))
